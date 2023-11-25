@@ -2,13 +2,9 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 import org.hibernate.query.NativeQuery;
 
-import javax.management.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -24,20 +20,16 @@ public class UserDaoHibernateImpl implements UserDao {
 
     }
 
-
     @Override
     public void createUsersTable() {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-
             String sql = "CREATE TABLE IF NOT EXISTS users " +
                    "(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
                    "name VARCHAR(25) NOT NULL, lastName VARCHAR(25) NOT NULL, " +
                    "age TINYINT NOT NULL)";
-
-            NativeQuery query = session.createNativeQuery(sql);
-            query.executeUpdate();
+            session.createNativeQuery(sql).executeUpdate();
             transaction.commit();
             System.out.println("таблица успешно создана...");
         } catch (Exception e) {
@@ -53,10 +45,7 @@ public class UserDaoHibernateImpl implements UserDao {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-
-            String sql = "DROP TABLE IF EXISTS users";
-            NativeQuery query = session.createNativeQuery(sql);
-            query.executeUpdate();
+            session.createNativeQuery("DROP TABLE IF EXISTS users").executeUpdate();
             transaction.commit();
             System.out.println("таблица успешно удалена...");
         } catch (Exception e) {
@@ -95,12 +84,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public List<User> getAllUsers() {
         List<User> usersList = new ArrayList<>();
         try (Session session = sessionFactory.openSession()) {
-            CriteriaBuilder cb = session.getCriteriaBuilder();
-            CriteriaQuery<User> cq = cb.createQuery(User.class);
-            Root<User> rootEntry = cq.from(User.class);
-            CriteriaQuery<User> all = cq.select(rootEntry);
-            TypedQuery<User> allQuery = session.createQuery(all);
-            usersList = allQuery.getResultList();
+            usersList = session.createQuery("from User", User.class).list();
             usersList.forEach(user -> System.out.println(user.toString()));
         } catch ( Exception e) {
             System.out.println("не удалось прочитать таблицу...");
@@ -113,9 +97,7 @@ public class UserDaoHibernateImpl implements UserDao {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            String sql = "DELETE FROM users";
-            NativeQuery query = session.createNativeQuery(sql);
-            query.executeUpdate();
+            session.createNativeQuery("DELETE FROM users").executeUpdate();
             transaction.commit();
             System.out.println("таблица успешно очищена...");
         } catch (Exception e) {
